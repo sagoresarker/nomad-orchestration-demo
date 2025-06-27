@@ -13,3 +13,20 @@ nomad alloc fs 95dd74e0 node-exporter/
 nomad alloc fs 95dd74e0
 
 nomad alloc status 9dc1b186
+
+75TRWDPAa3
+
+
+root@bhs-01:/etc/nomad.d# nomad acl bootstrap
+Accessor ID  = e638c2fd-b2c1-36ee-2060-78964183d477
+Secret ID    = 17fc0d65-af92-fb7d-ac5d-792676a47d3b
+Name         = Bootstrap Token
+Type         = management
+Global       = true
+Create Time  = 2025-06-27 05:03:15.952875398 +0000 UTC
+Expiry Time  = <none>
+Create Index = 2686
+Modify Index = 2686
+Policies     = n/a
+Roles        = n/a
+root@bhs-01:/etc/nomad.d#

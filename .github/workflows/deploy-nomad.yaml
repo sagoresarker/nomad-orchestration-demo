@@ -1,0 +1,45 @@
+name: Deploy to Nomad Cluster
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Optional: allows manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      NOMAD_ADDR: ${{ secrets.NOMAD_ADDR }}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+
+    steps:
+    - name: 📦 Checkout repo
+      uses: actions/checkout@v3
+
+    - name: ⚙️ Install Nomad CLI
+      run: |
+        curl -sL https://releases.hashicorp.com/nomad/1.7.5/nomad_1.7.5_linux_amd64.zip -o nomad.zip
+        unzip nomad.zip
+        sudo mv nomad /usr/local/bin/
+        nomad version
+
+    - name: 📡 Verify connection to Nomad cluster
+      run: |
+        echo "NOMAD_ADDR: $NOMAD_ADDR"
+        echo "Checking node status..."
+        nomad node status
+
+    - name: 🚀 Deploy all jobs
+      run: |
+        echo "Submitting jobs to Nomad..."
+        nomad job run jobs/firewall-setup.nomad
+        nomad job run jobs/node-exporter.nomad
+        nomad job run jobs/go-app.nomad
+
+    - name: ✅ Verify job status
+      run: |
+        echo "Fetching job status..."
+        nomad job status
