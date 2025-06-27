@@ -1,0 +1,15 @@
+nomad alloc logs -stderr 95dd74e0
+
+nomad job status node-exporter
+
+nomad job run jobs/node-exporter.nomad
+
+nomad job stop node-exporter
+
+curl -s http://localhost:9100/metrics | head -5
+
+nomad alloc fs 95dd74e0 node-exporter/
+
+nomad alloc fs 95dd74e0
+
+nomad alloc status 9dc1b186
