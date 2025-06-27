@@ -105,34 +105,6 @@ This will:
 ./run-all-jobs.sh stop-all
 ```
 
-## 🔍 Manual Testing
-
-### Test Node Exporter
-```bash
-# Check if Node Exporter is running
-curl http://localhost:9100/metrics
-
-# Should return system metrics
-```
-
-### Test Go Application
-```bash
-# Check if Go app is running
-nc -z localhost 8080
-echo $?  # Should return 0 if running
-
-# Check process
-ps aux | grep app
-```
-
-### Test Firewall
-```bash
-# Check firewall status
-sudo ufw status verbose
-
-# Should show enabled with proper rules
-```
-
 ## 📋 Individual Job Execution
 
 If you want to run jobs individually:
@@ -149,8 +121,6 @@ nomad job run jobs/node-exporter.nomad
 # Run Go application
 nomad job run jobs/go-app.nomad
 ```
-
-## 🔧 Troubleshooting
 
 ### Common Issues
 
@@ -187,30 +157,3 @@ nomad job run jobs/go-app.nomad
    sudo ufw allow 9100/tcp
    sudo ufw allow 8080/tcp
    ```
-
-## 🔐 Security Notes
-
-- The firewall job opens standard ports for Nomad and services
-- Node Exporter exposes system metrics (consider access control in production)
-- raw_exec driver runs with full system privileges
-- SSH access is preserved in firewall configuration
-
-## 📈 Monitoring
-
-After running the jobs, you can monitor:
-
-- **Nomad UI**: http://localhost:4646 (if running)
-- **Node Exporter**: http://localhost:9100/metrics
-- **Job Status**: Use the management script or Nomad CLI
-
-## 🎯 Testing Scenarios
-
-This setup tests:
-
-1. **Service Discovery**: Jobs register with Nomad's service discovery
-2. **Health Checks**: Both HTTP and TCP health checks
-3. **Resource Management**: CPU and memory constraints
-4. **Network Configuration**: Static port assignments
-5. **Batch Jobs**: One-time execution with firewall setup
-6. **Binary Execution**: Running compiled Go binaries
-7. **Script Execution**: Running bash scripts via Nomad
