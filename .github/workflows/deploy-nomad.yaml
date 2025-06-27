@@ -1,13 +1,48 @@
 name: Deploy to Nomad Cluster
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:  # Optional: allows manual trigger
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Select job to deploy'
+        required: true
+        default: 'deploy-all'
+        type: choice
+        options:
+          - deploy-all
+          - deploy-go-app
+          - deploy-node-exporter
+          - deploy-firewall-setup
+          - cleanup
 
 jobs:
-  deploy:
+  # ❌ Cleanup old jobs
+  cleanup:
+    if: github.event.inputs.job == 'cleanup'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      NOMAD_ADDR: ${{ secrets.NOMAD_ADDR }}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+
+    steps:
+    - name: ⚙️ Install Nomad CLI
+      run: |
+        curl -sL https://releases.hashicorp.com/nomad/1.7.5/nomad_1.7.5_linux_amd64.zip -o nomad.zip
+        unzip nomad.zip
+        sudo mv nomad /usr/local/bin/
+        nomad version
+
+    - name: ❌ Cleanup old jobs
+      run: |
+        nomad job stop -purge go-app || true
+        nomad job stop -purge firewall-setup || true
+        nomad job stop -purge node-exporter || true
+
+  # 🚀 Deploy All Jobs
+  deploy-all:
+    if: github.event.inputs.job == 'deploy-all'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -43,3 +78,111 @@ jobs:
       run: |
         echo "Fetching job status..."
         nomad job status
+
+  # 🔧 Deploy Go App Only
+  deploy-go-app:
+    if: github.event.inputs.job == 'deploy-go-app'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      NOMAD_ADDR: ${{ secrets.NOMAD_ADDR }}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+
+    steps:
+    - name: 📦 Checkout repo
+      uses: actions/checkout@v3
+
+    - name: ⚙️ Install Nomad CLI
+      run: |
+        curl -sL https://releases.hashicorp.com/nomad/1.7.5/nomad_1.7.5_linux_amd64.zip -o nomad.zip
+        unzip nomad.zip
+        sudo mv nomad /usr/local/bin/
+        nomad version
+
+    - name: 📡 Verify connection to Nomad cluster
+      run: |
+        echo "NOMAD_ADDR: $NOMAD_ADDR"
+        nomad node status
+
+    - name: 🔧 Deploy Go App
+      run: |
+        echo "Deploying Go App..."
+        nomad job run jobs/go-app.nomad
+
+    - name: ✅ Verify Go App status
+      run: |
+        echo "Checking Go App status..."
+        nomad job status go-app
+
+  # 📊 Deploy Node Exporter Only
+  deploy-node-exporter:
+    if: github.event.inputs.job == 'deploy-node-exporter'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      NOMAD_ADDR: ${{ secrets.NOMAD_ADDR }}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+
+    steps:
+    - name: 📦 Checkout repo
+      uses: actions/checkout@v3
+
+    - name: ⚙️ Install Nomad CLI
+      run: |
+        curl -sL https://releases.hashicorp.com/nomad/1.7.5/nomad_1.7.5_linux_amd64.zip -o nomad.zip
+        unzip nomad.zip
+        sudo mv nomad /usr/local/bin/
+        nomad version
+
+    - name: 📡 Verify connection to Nomad cluster
+      run: |
+        echo "NOMAD_ADDR: $NOMAD_ADDR"
+        nomad node status
+
+    - name: 📊 Deploy Node Exporter
+      run: |
+        echo "Deploying Node Exporter..."
+        nomad job run jobs/node-exporter.nomad
+
+    - name: ✅ Verify Node Exporter status
+      run: |
+        echo "Checking Node Exporter status..."
+        nomad job status node-exporter
+
+  # 🛡️ Deploy Firewall Setup Only
+  deploy-firewall-setup:
+    if: github.event.inputs.job == 'deploy-firewall-setup'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      NOMAD_ADDR: ${{ secrets.NOMAD_ADDR }}
+      NOMAD_TOKEN: ${{ secrets.NOMAD_TOKEN }}
+
+    steps:
+    - name: 📦 Checkout repo
+      uses: actions/checkout@v3
+
+    - name: ⚙️ Install Nomad CLI
+      run: |
+        curl -sL https://releases.hashicorp.com/nomad/1.7.5/nomad_1.7.5_linux_amd64.zip -o nomad.zip
+        unzip nomad.zip
+        sudo mv nomad /usr/local/bin/
+        nomad version
+
+    - name: 📡 Verify connection to Nomad cluster
+      run: |
+        echo "NOMAD_ADDR: $NOMAD_ADDR"
+        nomad node status
+
+    - name: 🛡️ Deploy Firewall Setup
+      run: |
+        echo "Deploying Firewall Setup..."
+        nomad job run jobs/firewall-setup.nomad
+
+    - name: ✅ Verify Firewall Setup status
+      run: |
+        echo "Checking Firewall Setup status..."
+        nomad job status firewall-setup
